@@ -1,0 +1,40 @@
+﻿@model IEnumerable<Local_Theatre.Models.Category>
+@{
+    ViewBag.Title = "Index";
+}
+
+@* show all the categories created *@
+
+<div class="container">
+    <div class="col-lg-10 col-md-10 mx-auto">
+        <h2 style="padding-bottom: 20px">All Local Theatre Categories</h2>
+
+        <table class="table">
+            <thead class="thead-dark" style="font-size:20px; font-family:Century Gothic; font-weight:600">
+                <tr>
+                    <th> @Html.DisplayNameFor(model => model.CategoryName)</th>
+                    <th></th>
+                </tr>
+            </thead>
+
+            <tbody style="font-size:15px; font-family:Century Gothic; font-weight:300">
+                @foreach (var item in Model)
+                {
+                <tr style="justify-content: space-between!important">
+                    <td> @Html.DisplayFor(modelItem => item.CategoryName)</td>
+                    <td>
+                        @* allows to edit or delete category *@
+                        @Html.ActionLink("Edit", "Edit", new { id = item.CategoryId }) |
+                        @Html.ActionLink("Delete", "Delete", new { id = item.CategoryId })
+                    </td>
+                </tr>
+                }
+            </tbody>
+        </table>
+
+        <p>
+            @Html.ActionLink("Create New", "Create", null, new { @class = "btn btn-dark"})
+        </p>
+
+    </div>
+</div>

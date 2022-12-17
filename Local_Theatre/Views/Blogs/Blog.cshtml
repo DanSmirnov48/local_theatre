@@ -1,0 +1,267 @@
+﻿@model Local_Theatre.Models.Comment
+@using Local_Theatre.Models
+@using Microsoft.AspNet.Identity
+@using Microsoft.AspNet.Identity.EntityFramework;
+
+@{
+    ViewBag.Title = "Blog";
+    //saving ViewBag.Blog to a variable
+    var blog = ViewBag.Blog;
+
+    User user = null;
+    LocalTheatreDbContext db = new LocalTheatreDbContext();
+    UserManager<User> userManager = new UserManager<User>(new UserStore<User>(db));
+
+    //if user is logged in, find him insize the database by userName
+    if (Request.IsAuthenticated) {
+        user = db.Users.Find(userManager.FindByEmail(User.Identity.GetUserName()).Id);
+    }
+}
+
+<div class="container">
+    <div class="row">
+        <div class="col-lg-10 col-md-10 mx-auto">
+
+            @if ((Request.IsAuthenticated == false || User.IsInRole("Suspended") || User.IsInRole("Member")) && blog.BlogApproved == false)
+            {
+                return;
+            }
+
+            @* if user is logged in and for each comment if comment is unapproved and was made by the user who's currently signed in *@
+            @if (Request.IsAuthenticated)
+            {
+                //show an alert notifying that their comment was not yet approved by staff.
+                foreach (var com in user.Comments.Where(b => b.CommentApproved == false && (b.BlogId == blog.BlogId && user.Id == b.UserId)))
+                {
+                    <div class="alert alert-warning alert-dismissible" style="font-size:20px; font-family:Century Gothic">
+                        <button type="button" class="close" data-dismiss="alert">&times;</button>
+                        <strong>Warning!</strong> Your comment must be approved by staff member before it can be published.
+                    </div>
+                }
+            }
+            @* if the blog hasnt been approved yet, show an alert message *@
+            @if (blog.BlogApproved == false)
+            {
+                <div class="alert alert-danger" style="font-size:20px; font-family:Century Gothic">
+                    <strong>@blog.BlogTitle</strong> hasn't been approved yet, please wait.
+                </div>
+            }
+            @* showing the post to the user *@
+            <div class="post-preview">
+                <a>
+                    <h2 class="post-title" style="font-size:25px; font-family:Century Gothic; font-weight:600">@blog.BlogTitle</h2>
+                    <h3 class="post-subtitle" style="font-size:20px; font-family:Century Gothic; font-weight:300">@blog.BlogContext </h3>
+                </a>
+
+                <div class="d-flex post-meta p">
+                    <div class="p-2" style="padding-left: 0!important">Posted On @blog.BlogPosted.ToString("dd MMMM yyyy")</div>
+                    <div class="p-2">By @blog.Staff.FirstName @blog.Staff.LastName</div>
+                    <div class="p-2">In @blog.Category.CategoryName</div>
+                    <div class="ml-auto p-2">@ViewBag.Count Comments</div>
+                </div>
+            </div>
+            @* if the post hasnt been approved yet, show an alert message *@
+            @if (blog.BlogApproved == false)
+            {
+                <div class="alert alert-warning" style="font-size:20px; font-family:Century Gothic">
+                    <strong>Warning!</strong> You can not comment on unapprovedd blog, please wait.
+                </div>
+            }
+
+            <br />
+            <br />
+
+             @*if blog is approved*@ 
+            @if (blog.BlogApproved)
+            {
+                if (Request.IsAuthenticated)
+                {
+                    //if user is signed in and is suspended show an alert notifying that this user can not post comments
+                    if (User.IsInRole("Suspended"))
+                    {
+                        <div class="alert alert-warning" style="font-size:20px; font-family:Century Gothic">
+                            <strong>Warning!</strong> You have been suspended from commenting.
+                        </div>
+                    }
+                    //else, user will see a text box where he can write a comment
+                    else
+                    {
+                        //sending the form to Create action inside the Comments controller
+                        using (Html.BeginForm("Create", "Comments"))
+                        {
+                            @Html.AntiForgeryToken()
+                            <div class="form-horizontal container-fluid">
+                                @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+                                @* asigning a new value onto blogId and making it hidden from the user *@
+                                @Html.HiddenFor(model => model.BlogId, new { @Value = blog.BlogId })
+                                @*@Html.HiddenFor(model => model.UserId, new { @Value = user.Id })*@
+
+                                <h3 style="font-family:Century Gothic; font-weight:600">Comments</h3>
+                                <h5 style="font-family:Century Gothic; font-weight:400">Post your comment here:</h5>
+                                <div class="form-group" style="font-family:Century Gothic">
+                                    @Html.EditorFor(model => model.CommentContext, new { htmlAttributes = new { @class = "form-control", @rows = 5 } })
+                                    @Html.ValidationMessageFor(model => model.CommentContext, "", new { @class = "text-danger" })
+                                </div>
+
+                                <div class="form-group">
+                                    <input type="submit" value="Post" class="btn btn-dark" style="font-family:Century Gothic; font-weight:600" />
+                                </div>
+                            </div>
+                        }
+                    }
+                }
+                else
+                {
+                    //else if user is not logged in, show an alert aslking user to log in
+                    <div class="alert alert-warning" style="font-size:20px; font-family:Century Gothic">
+                        <strong>Warning!</strong> You must <a href="@Url.Action("Login", "Account", routeValues: new {@returnUrl = ViewContext.HttpContext.Request.Url.PathAndQuery})" class="alert-link">Log In</a> to leave a comment.
+                        @*@Html.ActionLink("Login", "Login", "Account", routeValues: new {@returnUrl = ViewContext.HttpContext.Request.Url.PathAndQuery},htmlAttributes: new { id = "registerLink" })*@
+                    </div>
+                }
+            }
+
+            <br />
+            <br />
+
+            <div id="comments">
+                @* creating a foreach loop over the blogs comments *@
+                @foreach (var item in blog.Comments)
+                {
+                    //finding the user who wrote the comment
+                    User CommentOwner = db.Users.Find(item.UserId);
+
+                    if (Request.IsAuthenticated == true)
+                    {
+
+                        if (User.IsInRole("SysAdmin") || User.IsInRole("Moderator") || User.IsInRole("Staff"))
+                        {
+                            //if user is signed in as staff and comment is unapproved, he will be able to Approve and Delete the Comment
+                            if (item.CommentApproved == false)
+                            {
+                                <div class="post-preview">
+                                    <a>
+                                        <h5 class="post-subtitle p-2">@item.CommentContext</h5>
+                                    </a>
+                                    <div class="d-flex justify-content-end post-meta">
+                                        <div class="p-2 text-danger">[Not Approved]</div>
+                                        <div class="p-2">Posted on: @item.CommentPosted.ToString("dd MMMM yyyy")</div>
+                                        <div class="p-2">By @CommentOwner.FirstName @CommentOwner.LastName</div>
+                                    </div>
+
+                                    <div class="d-flex justify-content-end post-meta">
+                                        <div class="px-2"><a href="@Url.Action("ApproveComment", "Comments", new { id = item.CommentId })#comments">Approve</a></div>
+                                        <div><a href="@Url.Action("Delete", "Comments", new { id = item.CommentId })#comments">Delete</a></div>
+                                    </div>
+                                </div>
+                                <hr>
+                                <br />
+                            }
+                            //if user is signed in as staff and comment is approved, he will be able to Disapprove and Delete the Comment
+                            else if (item.CommentApproved == true)
+                            {
+                                <div class="post-preview">
+                                    <a>
+                                        <h5 class="post-subtitle p-2">@item.CommentContext</h5>
+                                    </a>
+                                    <div class="d-flex justify-content-end post-meta">
+                                        <div class="p-2">Posted on: @item.CommentPosted.ToString("dd MMMM yyyy")</div>
+                                        <div class="p-2">By @CommentOwner.FirstName @CommentOwner.LastName</div>
+                                    </div>
+
+                                    <div class="d-flex justify-content-end post-meta">
+                                        <div class="px-2"><a href="@Url.Action("DisapproveComment", "Comments", new { id = item.CommentId })#comments">Disapprove</a></div>
+                                        <div><a href="@Url.Action("Delete", "Comments", new { id = item.CommentId })#comments">Delete</a></div>
+                                    </div>
+                                </div>
+                                <hr>
+                                <br />
+                            }
+                        }
+                        else if (User.IsInRole("Member") || User.IsInRole("Suspended"))
+                        {
+                            //if user is member or suspended
+                            //if the comment belongs to the curently signed in member, user will be able to delete his own comment
+                            if (item.UserId == User.Identity.GetUserId())
+                            {
+                                if (item.CommentApproved == true)
+                                {
+                                    <div class="post-preview">
+                                        <a>
+                                            <h5 class="post-subtitle p-2">@item.CommentContext</h5>
+                                        </a>
+                                        <div class="d-flex justify-content-end post-meta">
+                                            <div class="p-2">Posted on: @item.CommentPosted.ToString("dd MMMM yyyy")</div>
+                                            <div class="p-2">By @CommentOwner.FirstName @CommentOwner.LastName</div>
+                                        </div>
+
+                                        <div class="d-flex justify-content-end post-meta">
+                                            <div class="px-2"><a href="@Url.Action("Delete", "Comments", new { id = item.CommentId })#comments">Delete</a></div>
+                                        </div>
+                                    </div>
+                                    <hr>
+                                    <br />
+                                }
+                                else if (item.CommentApproved == false)
+                                {
+                                    <div class="post-preview">
+                                        <a>
+                                            <h5 class="post-subtitle p-2">@item.CommentContext</h5>
+                                        </a>
+                                        <div class="d-flex justify-content-end post-meta">
+                                            <div class="p-2 text-danger">[Not Approved]</div>
+                                            <div class="p-2">Posted on: @item.CommentPosted.ToString("dd MMMM yyyy")</div>
+                                            <div class="p-2">By @CommentOwner.FirstName @CommentOwner.LastName</div>
+                                        </div>
+
+                                        <div class="d-flex justify-content-end post-meta">
+                                            <div class="px-2"><a href="@Url.Action("Delete", "Comments", new { id = item.CommentId })#comments">Delete</a></div>
+                                        </div>
+                                    </div>
+                                    <hr>
+                                    <br />
+                                }
+                            }
+                            //else if user is not the creator of the comment, he will only be able to view it
+                            else
+                            {
+                                if (item.CommentApproved == true)
+                                {
+                                    <div class="post-preview">
+                                        <a>
+                                            <h5 class="post-subtitle p-2">@item.CommentContext</h5>
+                                        </a>
+                                        <div class="d-flex justify-content-end post-meta">
+                                            <div>Posted on: @item.CommentPosted.ToString("dd MMMM yyyy")</div>
+                                            <div class="px-2">By @CommentOwner.FirstName @CommentOwner.LastName</div>
+                                        </div>
+                                    </div>
+                                    <hr>
+                                }
+                            }
+                        }
+                    }
+                    //else, if comment is approved, user can see the comment
+                    else
+                    {
+                        if (item.CommentApproved == true)
+                        {
+                            <div class="post-preview">
+                                <a>
+                                    <h5 class="post-subtitle p-2">@item.CommentContext</h5>
+                                </a>
+                                <div class="d-flex justify-content-end post-meta">
+                                    <div>Posted on: @item.CommentPosted.ToString("dd MMMM yyyy")</div>
+                                    <div class="px-2">By @CommentOwner.FirstName @CommentOwner.LastName</div>
+                                </div>
+                            </div>
+                            <hr>
+                        }
+                    }
+                }
+            </div>
+
+        </div>
+    </div>
+</div>
+
+

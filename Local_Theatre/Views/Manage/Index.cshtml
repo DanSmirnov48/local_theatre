@@ -1,0 +1,40 @@
+﻿@model Local_Theatre.Models.ViewModels.IndexViewModel
+@using Local_Theatre.Models
+@using Microsoft.AspNet.Identity
+@using Microsoft.AspNet.Identity.EntityFramework;
+
+@{
+    ViewBag.Title = "Manage";
+    LocalTheatreDbContext db = db = new LocalTheatreDbContext();
+    UserManager<User> userManager = new UserManager<User>(new UserStore<User>(db));
+    User user = db.Users.Find(userManager.FindByEmail(User.Identity.GetUserName()).Id);
+}
+
+<div class="container">
+    <div class="col-lg-10 col-md-10 mx-auto">
+        <h2>@ViewBag.Title.</h2>
+
+        <p class="text-success">@ViewBag.StatusMessage</p>
+        <div>
+            <h4>Change your account settings</h4>
+            <hr />
+            <dl class="dl-horizontal">
+
+                <dt>Role:</dt>
+                <dd> [ @user.CurrentRole.ToString()] </dd>
+
+                <dt>Password:</dt>
+                <dd>
+                    [ @if (Model.HasPassword)
+                    {@Html.ActionLink("Change your password", "ChangePassword") }
+                else
+                { @Html.ActionLink("Create", "SetPassword")} ]
+                </dd>
+
+                <dt>External Logins:</dt>
+                <dd>  @Model.Logins.Count [ @Html.ActionLink("Manage", "ManageLogins") ]</dd>
+
+            </dl>
+        </div>
+    </div>
+</div>

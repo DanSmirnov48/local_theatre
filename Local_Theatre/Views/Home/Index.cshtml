@@ -1,0 +1,76 @@
+﻿@model IEnumerable<Local_Theatre.Models.Category>
+@using Local_Theatre.Models
+@using Microsoft.AspNet.Identity
+@using Microsoft.AspNet.Identity.EntityFramework;
+
+@{
+    ViewBag.Title = "Home Page";
+
+    LocalTheatreDbContext db = new LocalTheatreDbContext();
+    UserManager<User> userManager = new UserManager<User>(new UserStore<User>(db));
+}
+<div class="container">
+    <div class="row justify-content-around">
+        <div class="col-6">
+            <h2 style="font-family:Century Gothic; font-weight:600">Local Theatre</h2>
+            <p style="font-size:15px; font-family:Century Gothic; font-weight:300">
+                Lorem Ipsum is simply dummy text of the printing and typesetting industry.
+                Lorem Ipsum has been the industry's standard dummy text ever since the 1500s,
+                when an unknown printer took a galley of type and scrambled it to make a type specimen book.
+                It has survived not only five centuries, but also the leap into electronic typesetting,
+                remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset
+                sheets containing Lorem Ipsum passages, and more recently with desktop publishing software
+                like Aldus PageMaker including versions of Lorem Ipsum.
+            </p>
+
+        </div>
+        <div class="col-4">
+            <h2 style="font-family:Century Gothic; font-weight:600">Blog Categories</h2>
+            <br />
+            <ul class="list-group">
+                @* diaplying all availibel categories plus the count of how many posts have each category *@
+                @foreach (var item in Model)
+                {
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        @* if there are more than 0 posts, make the link clickable *@
+                        @if (item.Blogs.Where(b => b.BlogApproved).Count() != 0)
+                        {
+                            <a style="font-size:15px; font-family:Century Gothic; font-weight:300" href="@Url.Action("Category", "Blogs", new { id = item.CategoryId, Search = Request.QueryString["Search"] })">@item.CategoryName </a>
+                        }
+                        //else disapay 0 for count and do not let user click on it
+                        else
+                        {
+                            <a style="font-size:15px; font-family:Century Gothic; font-weight:300">@item.CategoryName </a>
+                        }
+                        <span class="badge badge-primary badge-pill" style="font-size:15px; font-family:Century Gothic; font-weight:300">@item.Blogs.Where(b => b.BlogApproved).Count()</span>
+                    </li>
+                }
+            </ul>
+        </div>
+    </div>
+
+    @* showing the most recent announcment to the user *@
+    <div class="row" style="margin-top: 10rem">
+        <div class="col-lg-11 col-md-10 mx-auto">
+
+            <h2 class="text-center text-primary">Our Most Recent Announcment</h2>
+
+            @foreach (var item in ViewBag.Recent)
+            {
+                User CommentOwner = db.Users.Find(item.UserId);
+
+                <div class="post-preview">
+                    <a href="@Url.Action("Blog", "Blogs", new { id = item.BlogId })">
+                        <h2 class="post-title" style="font-size:25px; font-family:Century Gothic; font-weight:600">@item.BlogTitle</h2>
+                        <h3 class="post-subtitle" style="font-size:20px; font-family:Century Gothic; font-weight:300">@item.BlogContext </h3>
+                    </a>
+
+                    <div class="d-flex post-meta p">
+                        <div class="p-2" style="font-family: Century Gothic; padding-left: 0!important">Posted On @item.BlogPosted.ToString("dd MMMM yyyy")</div>
+                        <div class="p-2" style="font-family: Century Gothic">By @CommentOwner.FirstName @CommentOwner.LastName</div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>

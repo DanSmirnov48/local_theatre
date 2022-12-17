@@ -1,0 +1,53 @@
+﻿@model IPagedList<Local_Theatre.Models.Member>
+@using PagedList;
+@using PagedList.Mvc;
+
+@{
+    ViewBag.Title = "ManageMember";
+}
+
+@* View will all the memebers, admin can promote or suspend *@
+
+<div class="container-fluid">
+    <div class="col-lg-7 col-md-8 mx-auto">
+
+        <br />
+        <br />
+        <h4>Promote or Suspend Members of <span class="text-primary">Local Theatre</span></h4>
+        <table class="table">
+            <thead class="thead-dark" style="font-size:20px; font-family:Century Gothic; font-weight:600">
+                <tr>
+                    <th> @Html.DisplayNameFor(model => model.First().FirstName)</th>
+                    <th> @Html.DisplayNameFor(model => model.First().LastName)</th>
+                    <th> @Html.DisplayNameFor(model => model.First().UserName)</th>
+                    <th> @Html.DisplayNameFor(model => model.First().CurrentRole)</th>
+                    <th></th>
+                </tr>
+            </thead>
+
+            <tbody style="font-size:15px; font-family:Century Gothic; font-weight:300">
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td> @Html.DisplayFor(modelItem => item.FirstName)</td>
+                        <td> @Html.DisplayFor(modelItem => item.LastName)</td>
+                        <td> @Html.DisplayFor(modelItem => item.UserName)</td>
+                        <td> @Html.DisplayFor(modelItem => item.CurrentRole)</td>
+                        <td>
+                            @Html.ActionLink("Promote", "PromoteToRole", new { id = item.Id }) |
+                            @Html.ActionLink("Suspend", "SuspendMember", new { id = item.Id })
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        @* pagination *@
+        <div class="d-flex justify-content-end" style="font-family:Century Goithic">
+            @Html.PagedListPager(Model, page => Url.Action("ManageMember", new { page, Search = Request.QueryString["Search"] }),
+            new PagedListRenderOptions() { Display = PagedListDisplayMode.IfNeeded, DisplayPageCountAndCurrentLocation = true })
+        </div>
+
+    </div>
+</div>
+

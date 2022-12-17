@@ -1,0 +1,77 @@
+﻿@model IPagedList<Local_Theatre.Models.Comment>
+@using PagedList;
+@using PagedList.Mvc;
+
+@{
+    ViewBag.Title = "ModerateComments";
+}
+
+@* if model is empty, show a message to the user, else show a list of unapproved comments *@
+
+@if (Model.Count() == 0)
+{
+    <div class="jumbotron jumbotron-fluid">
+        <div class="container" style="font-family:Century Gothic">
+            <h1 class="display-4">Whops,</h1>
+            <p class="lead">We have no comments that need approvel at the moment, please come back later :)</p>
+            <a href='@Url.Action("Index", "Home")' class="btn btn-dark">Home Page</a>
+        </div>
+    </div>
+}
+else
+{
+    <div class="container" id="mid">
+        <div class="row">
+            <div class="col-lg-10 col-md-10 mx-auto">
+
+                <br />
+                <div class="d-flex justify-content-center" style="margin-bottom: 5rem">
+                    <div class="btn-group btn-group-lg" role="group">
+                        <a href='@Url.Action("ApproveAllComments", "Comments")' class="btn btn-light btn-outline-dark">Approve All Commentse</a>
+                        <a href='@Url.Action("DeteleAllComments", "Comments")' class="btn btn-light btn-outline-dark">Detele All Comments</a>
+                    </div>
+                </div>
+
+                @using (Html.BeginForm("ModerateComments", "Admin", FormMethod.Get))
+                {
+                    <div class="d-flex flex-row" style="font-family:Century Gothic">
+                        <div class="input-group">
+                            @Html.TextBox("Search", null, new { placeholder = "Search Comment by First or Last Names of a user", @class = "form-control" })
+                            <button type="submit" class="fas fa-search" style="background: none; border: none; color: Highlight; font-size:25px; padding: 0; margin:0 30px"> </button>
+                        </div>
+                    </div>
+                }
+                <br />
+
+                @foreach (var item in Model)
+                {
+
+                    <div class="post-preview">
+                        <a>
+                            <h5 class="post-subtitle p-2">@item.CommentContext</h5>
+                        </a>
+                        <div class="d-flex justify-content-end post-meta">
+                            <div class="p-2">Posted on: @item.CommentPosted.ToString("dd MMMM yyyy")</div>
+                            <div class="p-2">By @item.User.FirstName @item.User.LastName</div>
+                        </div>
+
+                        <div class="d-flex justify-content-end post-meta">
+                            <div class="px-2"><a href="@Url.Action("ApproveComment", "Comments", new { id = item.CommentId })">Approve</a></div>
+                            <div><a href="@Url.Action("Delete", "Comments", new { id = item.CommentId })">Delete</a></div>
+                        </div>
+                    </div>
+                    <hr>
+                    <br />
+                }
+
+                @* pagination *@
+                <div class="d-flex justify-content-end" style="font-family:Century Goithic">
+                    @Html.PagedListPager(Model, page => Url.Action("ModerateComments", new { page, Search = Request.QueryString["Search"] }),
+                    new PagedListRenderOptions() { Display = PagedListDisplayMode.IfNeeded, DisplayPageCountAndCurrentLocation = true })
+                </div>
+
+            </div>
+        </div>
+    </div>
+}
+

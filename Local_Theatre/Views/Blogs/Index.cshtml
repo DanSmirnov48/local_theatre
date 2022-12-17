@@ -1,0 +1,320 @@
+﻿@model IPagedList<Local_Theatre.Models.Blog>
+@using Local_Theatre.Models
+@using Microsoft.AspNet.Identity
+@using Microsoft.AspNet.Identity.EntityFramework;
+@using PagedList;
+@using PagedList.Mvc;
+
+@{
+    ViewBag.Title = "Index";
+
+    User user = null;
+    LocalTheatreDbContext db = new LocalTheatreDbContext();
+    UserManager<User> userManager = new UserManager<User>(new UserStore<User>(db));
+
+    if (Request.IsAuthenticated)
+    {
+        //if user is logged in, find him insize the database by userName
+        user = db.Users.Find(userManager.FindByEmail(User.Identity.GetUserName()).Id);
+    }
+}
+    @* if there are no blogs, diplay a notidfication message to the user *@
+    @if (Model.Count() == 0)
+    {
+        <div class="jumbotron jumbotron-fluid">
+            <div class="container" style="font-family:Century Gothic">
+                <h1 class="display-4">Whops,</h1>
+                <p class="lead">We have no blogs that can be seen at the moment, please come back later :)</p>
+                <a href='@Url.Action("Index", "Home")' class="btn btn-dark">Home Page</a>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-11 col-md-10 mx-auto">
+                    @* serach box for the user to search the posts *@
+                    @using (Html.BeginForm("Index", "Blogs", FormMethod.Get))
+                    {
+                        <div class="col-lg-12 col-md-10 mx-auto">
+                            <div class="d-flex flex-row" style="font-family:Century Gothic">
+                                <div class="input-group">
+                                    @Html.TextBox("Search", null, new { placeholder = "Search Blog by Name", @class = "form-control" })
+                                    <button type="submit" class="fas fa-search" style="background: none; border: none; color: Highlight; font-size:25px; padding: 0; margin:0 30px"> </button>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    @* looping over the model *@
+                    @foreach (var item in Model)
+                    {
+                        //creating comment count varialbe to hold the number of approved posts.
+                        var CountComments = db.Comments.Where(b => b.BlogId == item.BlogId && b.CommentApproved).Count();
+
+                        <div id="@item.BlogId">
+                            @* if user is Staff and is the creator of the post or user is Mod *@
+                            @if ((User.IsInRole("Staff") && item.UserId == user.Id) || User.IsInRole("Moderator"))
+                            {
+                                //if post is approved
+                                if (item.BlogApproved)
+                                {
+                                    <div class="d-flex justify-content-between">
+                                        <div class="p-2 d-flex align-items-center flex-column" style="margin-top: 45px">
+                                            @{
+                                                //loping over likes of the post, if user has likes this post already, allow him to remove his like
+                                                //and if the users hasnt liked the post, he will only be able to create a like, not dislike
+                                                bool UserLikedThiPost = false;
+                                                var likeId = 0;
+
+                                                foreach (var like in item.Likes)
+                                                {
+                                                    if (like.BlogId == item.BlogId && like.UserId == User.Identity.GetUserId())
+                                                    {
+                                                        UserLikedThiPost = true;
+                                                        likeId = like.LikeId;
+                                                    }
+                                                }
+                                                //if user likes, the post display Delete Form
+                                                if (UserLikedThiPost == true)
+                                                {
+
+                                                    using (Html.BeginForm("Delete", "Likes", new { id = likeId, page = Request.QueryString["page"] }))
+                                                    {
+                                                        @Html.AntiForgeryToken()
+                                                        <div><i class="fas fa-sort-up" style="font-size: 30px; color: green"></i></div>
+                                                        <div style="text-align: center">@item.Likes.Count</div>
+                                                        <div><button type="submit" class="fas fa-sort-down" style="background: none; border: none; color: gray; font-size:30px; padding: 0"> </button></div>
+                                                    }
+                                                }
+                                                //else, display Create Form
+                                                else
+                                                {
+                                                    using (Html.BeginForm("Create", "Likes", new { page = Request.QueryString["page"] }))
+                                                    {
+                                                        @Html.AntiForgeryToken()
+                                                        <div class="form-horizontal">
+                                                            @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+                                                            @Html.Hidden("BlogId", (int)item.BlogId)
+                                                            @Html.Hidden("UserId", (string)User.Identity.GetUserId())
+
+                                                            <div><button type="submit" class="fas fa-sort-up" style="background: none; border: none; color: gray; font-size:30px; padding: 0"> </button></div>
+                                                            <div style="text-align: center">@item.Likes.Count</div>
+                                                            <div><i class="fas fa-sort-down" style="font-size: 30px; color: gray"></i></div>
+
+                                                        </div>
+                                                    }
+                                                }
+                                            }
+
+                                        </div>
+                                        @* staff or mod roles can edit and delete the posts *@
+                                        <div class="p-3">
+                                            <div class="post-preview">
+                                                <a href="@Url.Action("Blog", "Blogs", new { id = item.BlogId })">
+                                                    <h2 class="post-title" style="font-size:25px; font-family:Century Gothic; font-weight:600">@item.BlogTitle</h2>
+                                                    <h3 class="post-subtitle" style="font-size:20px; font-family:Century Gothic; font-weight:300">  @item.BlogContext </h3>
+                                                </a>
+
+                                                <div class="d-flex post-meta p">
+                                                    <div style="padding-left: 0!important">Posted On @item.BlogPosted.ToString("dd MMMM yyyy")</div>
+                                                    <div class="px-2">By @item.Staff.FirstName @item.Staff.LastName</div>
+                                                    <div class="px-2"><a href="@Url.Action("Blog", "Blogs", new { id = item.BlogId })">In @item.Category.CategoryName</a></div>
+                                                    <div class="ml-auto"><a href="@Url.Action("Blog", "Blogs", new { id = item.BlogId })#comments">@CountComments Comments</a></div>
+                                                </div>
+
+                                                <div class="d-flex post-meta pt-2">
+                                                    <div class="pr-2"><a href="@Url.Action("Edit", "Blogs", new { id = item.BlogId })#@item.BlogId">[Edit]</a></div>
+                                                    <div class="px-2"><a href="@Url.Action("Delete", "Blogs", new { id = item.BlogId })#@item.BlogId">[Delete]</a></div>
+                                                    @* only the mod can apprioved the post *@
+                                                    @if (User.IsInRole("Moderator"))
+                                                    {
+                                                        <div class="px-2"><a href="@Url.Action("DisapproveBlog", "Blogs", new { id = item.BlogId, page = Request.QueryString["page"] })#@item.BlogId">[Disapprove]</a></div>
+                                                    }
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                                //else
+                                else
+                                {
+                                    <div class="d-flex justify-content-between">
+                                        <div class="p-2 d-flex align-items-center flex-column" style="margin-top: 45px">
+                                            @{
+                                                bool UserLikedThiPost = false;
+                                                var likeId = 0;
+
+                                                foreach (var like in item.Likes)
+                                                {
+                                                    if (like.BlogId == item.BlogId && like.UserId == User.Identity.GetUserId())
+                                                    {
+                                                        UserLikedThiPost = true;
+                                                        likeId = like.LikeId;
+                                                    }
+                                                }
+
+                                                if (UserLikedThiPost == true)
+                                                {
+                                                    using (Html.BeginForm("Delete", "Likes", new { id = likeId, page = Request.QueryString["page"] }))
+                                                    {
+                                                        @Html.AntiForgeryToken()
+                                                        <div><i class="fas fa-sort-up" style="font-size: 30px; color: green"></i></div>
+                                                        <div style="text-align: center">@item.Likes.Count</div>
+                                                        <div><button type="submit" class="fas fa-sort-down" style="background: none; border: none; color: gray; font-size:30px; padding: 0"> </button></div>
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    using (Html.BeginForm("Create", "Likes", new { page = Request.QueryString["page"] }))
+                                                    {
+                                                        @Html.AntiForgeryToken()
+                                                        <div class="form-horizontal">
+                                                            @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+                                                            @Html.Hidden("BlogId", (int)item.BlogId)
+                                                            @Html.Hidden("UserId", (string)User.Identity.GetUserId())
+
+                                                            <div><button type="submit" class="fas fa-sort-up" style="background: none; border: none; color: gray; font-size:30px; padding: 0"> </button></div>
+                                                            <div style="text-align: center">@item.Likes.Count</div>
+                                                            <div><i class="fas fa-sort-down" style="font-size: 30px; color: gray"></i></div>
+
+                                                        </div>
+                                                    }
+                                                }
+                                            }
+
+                                        </div>
+                                        @* staff and mod can see anupproved post, can delete or edit it *@
+                                        <div class="p-3">
+                                            <div class="post-preview">
+                                                <a href="@Url.Action("Blog", "Blogs", new { id = item.BlogId })">
+                                                    <h2 class="post-title" style="font-size:25px; font-family:Century Gothic; font-weight:600">@item.BlogTitle</h2>
+                                                    <h3 class="post-subtitle" style="font-size:20px; font-family:Century Gothic; font-weight:300">  @item.BlogContext </h3>
+                                                </a>
+
+                                                <div class="d-flex post-meta p">
+                                                    <div class="text-danger px-2">[Not Approved]</div>
+                                                    <div class="px-2" style="padding-left: 0!important">Posted On @item.BlogPosted.ToString("dd MMMM yyyy")</div>
+                                                    <div class="px-2">By @item.Staff.FirstName @item.Staff.LastName</div>
+                                                    <div class="px-2"><a href="@Url.Action("Blog", "Blogs", new { id = item.BlogId })">In @item.Category.CategoryName</a></div>
+                                                    <div class="ml-auto"><a href="@Url.Action("Blog", "Blogs", new { id = item.BlogId })#comments">@CountComments Comments</a></div>
+                                                </div>
+
+                                                <div class="d-flex post-meta pt-2">
+                                                    <div class="pr-2"><a href="@Url.Action("Edit", "Blogs", new { id = item.BlogId })#@item.BlogId">[Edit]</a></div>
+                                                    <div class="px-2"><a href="@Url.Action("Delete", "Blogs", new { id = item.BlogId })#@item.BlogId">[Delete]</a></div>
+                                                    @*only mod can approve the post*@ 
+                                                    @if (User.IsInRole("Moderator"))
+                                                    {
+                                                        <div class="px-2"><a href="@Url.Action("ApproveBlog", "Blogs", new { id = item.BlogId, page = Request.QueryString["page"] })#@item.BlogId">[Approve]</a></div>
+                                                    }
+                                                </div>
+
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            }
+                            //if the user is not mod or staff and the post is approved
+                            else
+                            {
+                                if (item.BlogApproved)
+                                {
+                                    <div class="d-flex justify-content-between">
+                                        <div class="p-2 d-flex align-items-center flex-column" style="margin-top: 45px">
+                                            @* if user is signed in he can like or remove like *@
+                                            @if (Request.IsAuthenticated)
+                                            {
+                                                bool UserLikedThiPost = false;
+                                                var likeId = 0;
+
+                                                foreach (var like in item.Likes)
+                                                {
+                                                    if (like.BlogId == item.BlogId && like.UserId == User.Identity.GetUserId())
+                                                    {
+                                                        UserLikedThiPost = true;
+                                                        likeId = like.LikeId;
+                                                    }
+                                                }
+
+                                                if (UserLikedThiPost == true)
+                                                {
+
+                                                    using (Html.BeginForm("Delete", "Likes", new { id = likeId, page = Request.QueryString["page"] }))
+                                                    {
+                                                        @Html.AntiForgeryToken()
+                                                        <div><i class="fas fa-sort-up" style="font-size: 30px; color: green"></i></div>
+                                                        <div style="text-align: center">@item.Likes.Count</div>
+                                                        <div><button type="submit" class="fas fa-sort-down" style="background: none; border: none; color: gray; font-size:30px; padding: 0"> </button></div>
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    using (Html.BeginForm("Create", "Likes", new { page = Request.QueryString["page"] }))
+                                                    {
+                                                        @Html.AntiForgeryToken()
+                                                        <div class="form-horizontal">
+                                                            @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+                                                            @Html.Hidden("BlogId", (int)item.BlogId)
+                                                            @Html.Hidden("UserId", (string)User.Identity.GetUserId())
+
+                                                            <div><button type="submit" class="fas fa-sort-up" style="background: none; border: none; color: gray; font-size:30px; padding: 0"> </button></div>
+                                                            <div style="text-align: center">@item.Likes.Count</div>
+                                                            <div><i class="fas fa-sort-down" style="font-size: 30px; color: gray"></i></div>
+
+                                                        </div>
+                                                    }
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <div><i class="fas fa-sort-up" style="font-size: 30px; color: gray"></i></div>
+                                                <div style="text-align: center">@item.Likes.Count</div>
+                                                <div><i class="fas fa-sort-down" style="font-size: 30px; color: gray"></i></div>
+                                            }
+
+                                        </div>
+                                        @* all other users will see all approved posts *@
+                                        <div class="p-3">
+                                            <div class="post-preview">
+                                                <a href="@Url.Action("Blog", "Blogs", new { id = item.BlogId })">
+                                                    <h2 class="post-title" style="font-size:25px; font-family:Century Gothic; font-weight:600">@item.BlogTitle</h2>
+                                                    <h3 class="post-subtitle" style="font-size:20px; font-family:Century Gothic; font-weight:300">@item.BlogContext </h3>
+                                                </a>
+
+                                                <div class="d-flex post-meta">
+                                                    <div>Posted On @item.BlogPosted.ToString("dd MMMM yyyy")</div>
+                                                    <div class="px-2">By @item.Staff.FirstName @item.Staff.LastName</div>
+                                                    <div class="px-2"><a href="@Url.Action("Category", "Blogs", new { id = item.CategoryId })">In @item.Category.CategoryName</a></div>
+                                                    <div class="ml-auto px-2"><a href="@Url.Action("Blog", "Blogs", new { id = item.BlogId })#comments">@CountComments Comments</a></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            }
+                            <hr>
+                        </div>
+                    }
+
+                    @* if the url contails Category, meaning user has picked a category and is scrolling pages, the category will remain *@
+                    @if (Request.Url.AbsoluteUri.Contains("Category"))
+                    {
+                        <div class="d-flex justify-content-end" style="font-family:Century Goithic">
+                            @Html.PagedListPager(Model, page => Url.Action("Category", new { page, Category = Request.QueryString["Category"], Search = Request.QueryString["Search"] }),
+                            new PagedListRenderOptions() { Display = PagedListDisplayMode.IfNeeded, DisplayPageCountAndCurrentLocation = true })
+                        </div>
+                    }
+                    //else the page will go to the next page without category passed in.
+                    else 
+                    {
+                        <div class="d-flex justify-content-end" style="font-family:Century Goithic">
+                            @Html.PagedListPager(Model, page => Url.Action("Index", new { page, Search = Request.QueryString["Search"] }),
+                            new PagedListRenderOptions() { Display = PagedListDisplayMode.IfNeeded, DisplayPageCountAndCurrentLocation = true })
+                        </div>
+                    }
+
+                </div>
+            </div>
+        </div>
+    }

@@ -1,0 +1,69 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<mvcSiteMap xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xmlns="http://mvcsitemap.codeplex.com/schemas/MvcSiteMap-File-4.0"
+            xsi:schemaLocation="http://mvcsitemap.codeplex.com/schemas/MvcSiteMap-File-4.0 MvcSiteMapSchema.xsd">
+
+  <mvcSiteMapNode title="Home" controller="Home" action="Index">
+    
+    <mvcSiteMapNode title="Blogs" controller="Blogs" action="Index">
+      <mvcSiteMapNode title="My Blogs" controller="Blogs" action="MyBlogs" preservedRouteParameters="id"/>
+      <mvcSiteMapNode title="Search" controller="Blogs" action="Index" preservedRouteParameters="id"/>
+      <mvcSiteMapNode title="Details" controller="Blogs" action="Blog" preservedRouteParameters="id"/>
+      <mvcSiteMapNode title="Category" controller="Blogs" action="Category" preservedRouteParameters="id" />
+      <mvcSiteMapNode title="Create" controller="Blogs" action="Create"/>
+      <mvcSiteMapNode title="Delete" controller="Blogs" action="Delete" preservedRouteParameters="id"/>
+      <mvcSiteMapNode title="Details" controller="Blogs" action="Details" preservedRouteParameters="id"/>
+      <mvcSiteMapNode title="Edit" controller="Blogs" action="Edit" preservedRouteParameters="id"/>
+      <mvcSiteMapNode title="Moderate Blogs" controller="Blogs" action="ModerateBlogs" preservedRouteParameters="id"/>
+    </mvcSiteMapNode>
+    
+    <mvcSiteMapNode title="Contact" controller="Home" action="Contact">
+      <mvcSiteMapNode title="Contact" controller="Home" action="Contact"/>
+      <mvcSiteMapNode title="Redirect View" controller="Home" action="RedirectView"/>
+    </mvcSiteMapNode>
+
+    <mvcSiteMapNode title="Index" controller="Likes" action="MyLikedPosts">
+      <mvcSiteMapNode title="My Liked Posts" controller="Likes" action="MyLikedPosts" preservedRouteParameters="id"/>
+    </mvcSiteMapNode>
+    
+    <mvcSiteMapNode title="Users" controller="Admin" action="ViewUsers">
+      <mvcSiteMapNode title="All Users" controller="Admin" action="ViewUsers"/>
+      <mvcSiteMapNode title="Edit Staff" controller="Admin" action="EditStaff" preservedRouteParameters="id"/>
+      <mvcSiteMapNode title="Edit Member" controller="Admin" action="EditMember" preservedRouteParameters="id"/>
+      <mvcSiteMapNode title="Details" controller="Admin" action="Details" preservedRouteParameters="id"/>
+      <mvcSiteMapNode title="Change Role" controller="Admin" action="ChangeRole" preservedRouteParameters="id"/>
+      <mvcSiteMapNode title="New Staff" controller="Admin" action="CreateStaff"/>
+      <mvcSiteMapNode title="Manage Member" controller="Admin" action="ManageMember"/>
+      <mvcSiteMapNode title="Promote" controller="Admin" action="PromoteToRole" preservedRouteParameters="id"/>
+      <mvcSiteMapNode title="Manage Comments" controller="Admin" action="ModerateComments"/>
+    </mvcSiteMapNode>
+
+    <mvcSiteMapNode title="Categories" controller="Categories" action="Index">
+      <mvcSiteMapNode title="Create" controller="Categories" action="Create">
+        <mvcSiteMapNode title="Create" controller="Categories" action="Create" preservedRouteParameters="id"/>
+      </mvcSiteMapNode>
+      <mvcSiteMapNode title="Edit" controller="Categories" action="Edit">
+        <mvcSiteMapNode title="Edit" controller="Categories" action="Edit" preservedRouteParameters="id"/>
+      </mvcSiteMapNode>
+    </mvcSiteMapNode>
+
+    <mvcSiteMapNode title="Account" controller="Account" action="Login">
+      <mvcSiteMapNode title="Login" controller="Account" action="Login"/>
+      <mvcSiteMapNode title="Register" controller="Account" action="Register"/>
+      <mvcSiteMapNode title="LogOff" controller="Account" action="LogOff"/>
+    </mvcSiteMapNode>
+
+    <mvcSiteMapNode title="Account" controller="Manage" action="Index">
+      <mvcSiteMapNode title="Change Password" controller="Manage" action="ChangePassword"/>
+      <mvcSiteMapNode title="Set Password" controller="Manage" action="SetPassword"/>
+      <mvcSiteMapNode title="Manage Logins" controller="Manage" action="ManageLogins"/>
+    </mvcSiteMapNode>
+
+    <mvcSiteMapNode title="Create" controller="Comments" action="Create">
+      <mvcSiteMapNode title="Create" controller="Comments" action="Create" preservedRouteParameters="id"/>
+    </mvcSiteMapNode>
+    
+    
+  </mvcSiteMapNode>
+
+</mvcSiteMap>

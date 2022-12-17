@@ -1,0 +1,118 @@
+﻿
+@{
+    ViewBag.Title = "DatailsCustomer";
+}
+
+@model Local_Theatre.Models.Member
+
+@{
+    ViewBag.Title = "DatailsCustomer";
+}
+
+@* Details of a member *@
+
+<div class="container">
+    <div class="col-lg-8 col-md-10 mx-auto">
+        <h2>@Model.FirstName @Model.LastName</h2>
+
+        <div>
+            <h4>Member</h4>
+            <hr />
+            <dl class="dl-horizontal">
+                <dt>
+                    @Html.DisplayNameFor(model => model.FirstName)
+                </dt>
+
+                <dd>
+                    @Html.DisplayFor(model => model.FirstName)
+                </dd>
+
+                <dt>
+                    @Html.DisplayNameFor(model => model.LastName)
+                </dt>
+
+                <dd>
+                    @Html.DisplayFor(model => model.LastName)
+                </dd>
+
+                <dt>
+                    @Html.DisplayNameFor(model => model.DateofBirth)
+                </dt>
+
+                <dd>
+                    @Html.DisplayFor(model => model.DateofBirth)
+                </dd>
+
+                <dt>
+                    @Html.DisplayNameFor(model => model.RegistereredAt)
+                </dt>
+
+                <dd>
+                    @Html.DisplayFor(model => model.RegistereredAt)
+                </dd>
+
+                <dt>
+                    @Html.DisplayNameFor(model => model.Email)
+                </dt>
+
+                <dd>
+                    @Html.DisplayFor(model => model.Email)
+                </dd>
+
+                <dt>
+                    @Html.DisplayNameFor(model => model.EmailConfirmed)
+                </dt>
+
+                <dd>
+                    @Html.DisplayFor(model => model.EmailConfirmed)
+                </dd>
+
+                <dt>
+                    @Html.DisplayNameFor(model => model.PhoneNumber)
+                </dt>
+
+                <dd>
+                    @Html.DisplayFor(model => model.PhoneNumber)
+                </dd>
+
+                <dt>
+                    @Html.DisplayNameFor(model => model.PhoneNumberConfirmed)
+                </dt>
+
+                <dd>
+                    @Html.DisplayFor(model => model.PhoneNumberConfirmed)
+                </dd>
+
+                <dt>
+                    @Html.DisplayNameFor(model => model.UserName)
+                </dt>
+
+                <dd>
+                    @Html.DisplayFor(model => model.UserName)
+                </dd>
+
+                <dt>
+                    @Html.DisplayNameFor(model => model.MemberStatus)
+                </dt>
+
+                <dd>
+                    @Html.DisplayFor(model => model.MemberStatus)
+                </dd>
+
+                <dt>
+                    @Html.DisplayNameFor(model => model.Membership)
+                </dt>
+
+                <dd>
+                    @Html.DisplayFor(model => model.Membership)
+                </dd>
+
+            </dl>
+        </div>
+        <p>
+            @Html.ActionLink("Edit", "EditMember", new { id = Model.Id }) |
+            @Html.ActionLink("Back to List", "ViewUsers")
+        </p>
+    </div>
+</div>
+

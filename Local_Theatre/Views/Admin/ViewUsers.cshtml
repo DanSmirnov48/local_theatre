@@ -1,0 +1,82 @@
+﻿@model IPagedList<Local_Theatre.Models.User>
+@using Local_Theatre.Models;
+@using PagedList;
+@using PagedList.Mvc;
+
+
+@{
+    ViewBag.Title = "ViewUsers";
+}
+
+@* if model is empty, show a message to the user, else show all the users of the application and allows to edit, view details, delete or change role of a user *@
+
+<div class="container-fluid">
+    <div class="col-lg-10 col-md-10 mx-auto">
+
+        <br />
+        <br />
+        <h2 style="padding-bottom: 20px">All <span class="text-primary">Local Theatre</span> Users</h2>
+
+        @using (Html.BeginForm("ViewUsers", "Admin", FormMethod.Get))
+        {
+            <div class="d-flex flex-row" style="font-family:Century Gothic">
+                <div class="input-group">
+                    @Html.TextBox("Search", null, new { placeholder = "Search user by First or Last Names", @class = "form-control" })
+                    <button type="submit" class="fas fa-search" style="background: none; border: none; color: Highlight; font-size:25px; padding: 0; margin:0 30px"> </button>
+                </div>
+            </div>
+        }
+
+        <br />
+        <br />
+
+        <table class="table">
+            <thead class="thead-dark" style="font-size:20px; font-family:Century Gothic; font-weight:600">
+                <tr>
+                    <th> @Html.DisplayNameFor(model => model.First().FirstName)</th>
+                    <th> @Html.DisplayNameFor(model => model.First().LastName)</th>
+                    <th> @Html.DisplayNameFor(model => model.First().DateofBirth)</th>
+                    <th> @Html.DisplayNameFor(model => model.First().Email)</th>
+                    <th> @Html.DisplayNameFor(model => model.First().PhoneNumber)</th>
+                    <th> @Html.DisplayNameFor(model => model.First().RegistereredAt)</th>
+                    <th> @Html.DisplayNameFor(model => model.First().CurrentRole)</th>
+                    <th></th>
+                </tr>
+            </thead>
+
+            <tbody style="font-size:15px; font-family:Century Gothic; font-weight:300">
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td> @Html.DisplayFor(modelItem => item.FirstName)</td>
+                        <td> @Html.DisplayFor(modelItem => item.LastName)</td>
+                        <td> @Html.DisplayFor(modelItem => item.DateofBirth)</td>
+                        <td> @Html.DisplayFor(modelItem => item.Email)</td>
+                        <td> @Html.DisplayFor(modelItem => item.PhoneNumber)</td>
+                        <td> @Html.DisplayFor(modelItem => item.RegistereredAt)</td>
+                        <td> @Html.DisplayFor(modelItem => item.CurrentRole)</td>
+                        <td>
+                            @Html.ActionLink("Edit", "Edit" + (item is Staff ? "Staff" : "Member"), new { id = item.Id }) |
+                            @Html.ActionLink("Details", "Details", new { id = item.Id }) |
+                            @Html.ActionLink("Delete", "Delete", new { id = item.Id }) |
+                            @Html.ActionLink("Change Role", "ChangeRole", new { id = item.Id })
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        @* pagination *@
+        <div class="d-flex justify-content-end" style="font-family:Century Goithic">
+            @Html.PagedListPager(Model, page => Url.Action("ViewUsers", new { page, Search = Request.QueryString["Search"] }),
+            new PagedListRenderOptions() { Display = PagedListDisplayMode.IfNeeded, DisplayPageCountAndCurrentLocation = true })
+        </div>
+
+        <p>
+            @Html.ActionLink("New Staff", "CreateStaff", null, new { @class = "btn btn-dark" })
+        </p>
+
+    </div>
+</div>
+
+

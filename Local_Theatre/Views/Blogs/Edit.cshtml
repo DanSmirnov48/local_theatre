@@ -1,0 +1,64 @@
+﻿@model Local_Theatre.Models.Blog
+
+@{
+    ViewBag.Title = "Edit";
+}
+
+@* Edit View, Mods and the creator of the post can edit the post *@
+
+<div class="container">
+    <div class="row">
+        <div class="col-lg-11 col-md-10 mx-auto">
+            @using (Html.BeginForm())
+            {
+                @Html.AntiForgeryToken()
+
+                <div class="form-horizontal" style="font-family:Century Gothic">
+                    <hr />
+                    @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+                    @Html.HiddenFor(model => model.BlogId)
+                    @Html.HiddenFor(model => model.UserId)
+                    @Html.HiddenFor(model => model.BlogPosted)
+                    @*@Html.HiddenFor(model => model.BlogApproved)*@
+
+                    @if (User.IsInRole("Staff")) { @Html.HiddenFor(model => model.BlogApproved, new { @Value = Model.BlogApproved == false }) }
+                    else { @Html.HiddenFor(model => model.BlogApproved, new { @Value = Model.BlogApproved == true }) }
+
+                    <div class="form-group">
+                        @Html.LabelFor(model => model.CategoryId, "CategoryId", htmlAttributes: new { @class = "control-label col-md-2" })
+                        <div class="col-md-10">
+                            @Html.DropDownList("CategoryId", null, htmlAttributes: new { @class = "form-control" })
+                            @Html.ValidationMessageFor(model => model.CategoryId, "", new { @class = "text-danger" })
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        @Html.LabelFor(model => model.BlogTitle, htmlAttributes: new { @class = "control-label col-md-2" })
+                        <div class="col-md-10">
+                            @Html.EditorFor(model => model.BlogTitle, new { htmlAttributes = new { @class = "form-control" } })
+                            @Html.ValidationMessageFor(model => model.BlogTitle, "", new { @class = "text-danger" })
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        @Html.LabelFor(model => model.BlogContext, htmlAttributes: new { @class = "control-label col-md-2" })
+                        <div class="col-md-10">
+                            @Html.EditorFor(model => model.BlogContext, new { htmlAttributes = new { @class = "form-control", @rows = 15 } })
+                            @Html.ValidationMessageFor(model => model.BlogContext, "", new { @class = "text-danger" })
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="col-md-offset-2 col-md-10">
+                            <input type="submit" value="Save" class="btn btn-dark" />
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <div>
+                @Html.ActionLink("Back to List", "Index")
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,74 @@
+﻿@model IPagedList<Local_Theatre.Models.Like>
+@using Local_Theatre.Models
+@using PagedList;
+@using PagedList.Mvc;
+
+@{
+    ViewBag.Title = "MyLikedPosts";
+    LocalTheatreDbContext db = new LocalTheatreDbContext();
+}
+@* if there are no values in model, show a notification *@
+@if (Model.Count() == 0)
+{
+    <div class="jumbotron jumbotron-fluid">
+        <div class="container" style="font-family:Century Gothic">
+            <h1 class="display-4">Whops,</h1>
+            <p class="lead">You haven't liked any of the our posts :(</p>
+            <a href='@Url.Action("Index", "Blogs")' class="btn btn-dark">Our Blog</a>
+        </div>
+    </div>
+}
+else
+{
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-11 col-md-10 mx-auto">
+                @* else for each like in the model *@
+                @foreach (var item in Model)
+                {
+                    //get the blog, user and category values
+                    var blog = db.Blogs.Find(item.BlogId);
+                    var user = db.Users.Find(blog.UserId);
+                    var category = db.Categories.Find(blog.CategoryId);
+                    var CountComments = db.Comments.Where(b => b.BlogId == item.BlogId && b.CommentApproved).Count();
+                    //if the post approved, display the post user has liked.
+                    if (blog.BlogApproved)
+                    {
+                        <div class="d-flex justify-content-between">
+                            <div class="p-2 d-flex align-items-center flex-column" style="margin-top: 45px">
+                                @* allow user to remove his like *@
+                                @using (Html.BeginForm("Delete1", "Likes", new { id = item.LikeId, page = Request.QueryString["page"]}))
+                                {
+                                    @Html.AntiForgeryToken()
+                                    <div><button type="submit" class="fas fa-trash" style="background: none; border: none; color: red; font-size:25px; padding: 0"> </button></div>
+                                }
+                            </div>
+
+                            <div class="p-3">
+                                <div class="post-preview">
+                                    <a href="@Url.Action("Blog", "Blogs", new { id = item.BlogId })">
+                                        <h2 class="post-title" style="font-size:25px; font-family:Century Gothic; font-weight:600">@blog.BlogTitle</h2>
+                                        <h3 class="post-subtitle" style="font-size:20px; font-family:Century Gothic; font-weight:300">@blog.BlogContext </h3>
+                                    </a>
+
+                                    <div class="d-flex post-meta">
+                                        <div class="py-2">Posted On @blog.BlogPosted.ToString("dd MMMM yyyy")</div>
+                                        <div class="p-2">By @user.FirstName @user.LastName</div>
+                                        <div class="p-2"><a href="@Url.Action("Category", "Blogs", new { id = blog.CategoryId })">In @category.CategoryName</a></div>
+                                        <div class="ml-auto p-2"><a href="@Url.Action("Blog", "Blogs", new { id = blog.BlogId })#comments">@CountComments Comments</a></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+                @* pagination to move between pages *@
+                <div class="d-flex justify-content-end" style="font-family:Century Goithic">
+                    @Html.PagedListPager(Model, page => Url.Action("MyLikedPosts", new { page }),
+                    new PagedListRenderOptions() { Display = PagedListDisplayMode.IfNeeded, DisplayPageCountAndCurrentLocation = true })
+                </div>
+
+            </div>
+        </div>
+    </div>
+}

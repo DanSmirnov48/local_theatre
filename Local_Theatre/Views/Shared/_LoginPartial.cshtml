@@ -1,0 +1,50 @@
+﻿@using Microsoft.AspNet.Identity
+@if (Request.IsAuthenticated && ViewData.ContainsKey("FullName"))
+{
+    using (Html.BeginForm("LogOff", "Account", FormMethod.Post, new { id = "logoutForm", @class = "nav-link" }))
+    {
+        @Html.AntiForgeryToken()
+
+        <ul class="navbar-nav ml-auto">
+            <li class="dropdown nav-item" style="user-select: none">
+                <a class="dropdown-toggle nav-link" data-toggle="dropdown" style="cursor:pointer; text-decoration:none"> Welcome, @ViewData["FullName"]<span class="caret"></span></a>
+                <ul class="dropdown-menu">
+                    @*show additional navigation links to Admin*@
+                    @if (User.IsInRole("SysAdmin"))
+                    {
+                        <li class="nav-item"> @Html.ActionLink("Users", "ViewUsers", "Admin", routeValues: null, htmlAttributes: new { @class = "nav-link" }) </li>
+                        <li class="nav-item"> @Html.ActionLink("Promote/Suspend", "ManageMember", "Admin", routeValues: null, htmlAttributes: new { @class = "nav-link" }) </li>
+                        <li class="nav-item"> @Html.ActionLink("Categories", "Index", "Categories", routeValues: null, htmlAttributes: new { @class = "nav-link" }) </li>
+                        <li class="nav-item"> @Html.ActionLink("Manage Comments", "ModerateComments", "Admin", routeValues: null, htmlAttributes: new { @class = "nav-link" }) </li>
+                    }
+                    @*show additional navigation links to Moderator*@
+                    @if (User.IsInRole("Moderator"))
+                    {
+                        <li class="nav-item"><a href="@Url.Action("ModerateBlogs", "Blogs", new { unapproved = true })" class="nav-link">Manage Blogs</a></li>
+                        <li class="nav-item"> @Html.ActionLink("Manage Comments", "ModerateComments", "Admin", routeValues: null, htmlAttributes: new { @class = "nav-link" }) </li>
+                    }
+                    @*show additional navigation links to Staff*@
+                    @if (User.IsInRole("Staff"))
+                    {
+                        <li class="nav-item"><a href="@Url.Action("MyBlogs", "Blogs", new { id = User.Identity.GetUserId()})" class="nav-link">My Blogs</a></li>
+                        <li class="nav-item"> @Html.ActionLink("New Blog", "Create", "Blogs", routeValues: null, htmlAttributes: new { @class = "nav-link" }) </li>
+
+                    }
+                    @*show additional navigation links all signed in users*@
+                    <li class="nav-item"><a href="@Url.Action("MyLikedPosts", "Likes", new { id = User.Identity.GetUserId()})" class="nav-link">Liked Blogs</a></li>
+                    <li class="dropdown-divider"></li>
+                    <li class="nav-item"> @Html.ActionLink("Profile", "Index", "Manage", routeValues: null, htmlAttributes: new { @class = "nav-link" }) </li>
+                    <li class="nav-item nav-link"><a href="javascript:document.getElementById('logoutForm').submit()">Log off</a></li>
+                </ul>
+            </li>
+        </ul>
+    }
+}
+else
+{
+    @*show log in and register links to unauthorized user*@
+    <uls class="navbar-nav ml-auto">
+        <li class="nav-item">@Html.ActionLink("Log in", "Login", "Account", routeValues: null, htmlAttributes: new { id = "loginLink", @class = "nav-link" })</li>
+        <li class="nav-item">@Html.ActionLink("Register", "Register", "Account", routeValues: null, htmlAttributes: new { id = "registerLink", @class = "nav-link" })</li>
+    </uls>
+}
